@@ -1,0 +1,15 @@
+name: code-analysis-env
+version: 1.0
+description: AI environment for code analysis with easy medium hard tasks
+
+tasks:
+  - easy
+  - medium
+  - hard
+
+reward_range: [0.0, 1.0]
+
+api:
+  reset: /reset
+  step: /step
+  state: /state

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Code Analysis OpenEnv</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Custom Code Analysis</h1>
+
+        <textarea id="userCode" rows="10" cols="80" placeholder="Paste your code here..."></textarea>
+        <br>
+        <button onclick="analyzeCode()">Analyze Code</button>
+
+        <pre id="outputBox">Analysis will appear here</pre>
+    </div>
+
+    <script>
+        async function analyzeCode() {
+            const code = document.getElementById("userCode").value;
+            if (!code.trim()) { alert("Please enter some code!"); return; }
+
+            const response = await fetch('/analyze', {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ code })
+            });
+
+            const data = await response.json();
+            document.getElementById("outputBox").textContent = 
+                `Difficulty: ${data.difficulty}\n\nSuggestions:\n- ${data.suggestions.join("\n- ")}`;
+        }
+    </script>
+</body>
+</html>
