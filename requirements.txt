@@ -4,3 +4,4 @@ pydantic
 jinja2
 requests
 PyYAML==6.0.3
+openai
