@@ -54,29 +54,28 @@ async def home(request: Request):
 # ---------------- TASK DISCOVERY ----------------
 @app.get("/tasks")
 async def get_tasks():
-    return JSONResponse(content={
+    return {
         "tasks": [
             {
                 "id": "easy",
-                "name": "Syntax Error Detection",
-                "grader": True,
-                "reward_range": [0.01, 0.99]
+                "grader": "grade_easy",
+                "difficulty": "easy",
+                "score_range": [0.0, 1.0]
             },
             {
                 "id": "medium",
-                "name": "Runtime Bug Detection",
-                "grader": True,
-                "reward_range": [0.01, 0.99]
+                "grader": "grade_medium",
+                "difficulty": "medium",
+                "score_range": [0.0, 1.0]
             },
             {
                 "id": "hard",
-                "name": "Security Vulnerability Detection",
-                "grader": True,
-                "reward_range": [0.01, 0.99]
+                "grader": "grade_hard",
+                "difficulty": "hard",
+                "score_range": [0.0, 1.0]
             }
         ]
-    })
-
+    }
 
 # ---------------- RESET ----------------
 @app.post("/reset")
