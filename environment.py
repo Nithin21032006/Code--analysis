@@ -1,10 +1,11 @@
-from models import Action, Observation, EnvState
+from models import Observation, EnvState
 from tasks import TASKS
 from graders import grade_action
 
+
 class CodeAnalysisEnv:
     def __init__(self):
-        self.task = None
+        self.task = TASKS["easy"]
         self.step_count = 0
         self.total_reward = 0.0
         self.done = False
@@ -16,7 +17,7 @@ class CodeAnalysisEnv:
         self.done = False
         return self.state()
 
-    def step(self, action: Action):
+    def step(self, action):
         reward, done, feedback = grade_action(self.task, action)
 
         self.step_count += 1
@@ -32,14 +33,6 @@ class CodeAnalysisEnv:
         )
 
     def state(self):
-        if self.task is None:
-            return EnvState(
-                task_id="none",
-                difficulty="none",
-                step_count=self.step_count,
-                total_reward=self.total_reward,
-                done=self.done
-            )
         return EnvState(
             task_id=self.task["id"],
             difficulty=self.task["difficulty"],
