@@ -15,7 +15,7 @@ env = CodeAnalysisEnv()
 templates = Jinja2Templates(directory="templates")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# REQUIRED: use injected proxy credentials
+# Use injected proxy credentials safely
 client = OpenAI(
     base_url=os.environ["API_BASE_URL"],
     api_key=os.environ["API_KEY"]
@@ -25,14 +25,27 @@ client = OpenAI(
 # ---------------- HOME ----------------
 @app.get("/")
 async def home(request: Request):
-    state = env.state()
-    return templates.TemplateResponse(
-        "index.html",
-        {
-            "request": request,
-            "state": state.dict()
-        }
-    )
+    try:
+        state = env.state()
+
+        if isinstance(state, dict):
+            state_data = state
+        else:
+            state_data = state.dict()
+
+        return templates.TemplateResponse(
+            "index.html",
+            {
+                "request": request,
+                "state": state_data
+            }
+        )
+
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Home failed: {str(e)}"}
+        )
 
 
 # ---------------- TASK DISCOVERY ----------------
@@ -65,21 +78,55 @@ async def get_tasks():
 # ---------------- RESET ----------------
 @app.post("/reset")
 async def reset(level: str = "easy"):
-    result = env.reset(level)
-    return JSONResponse(content=result.dict())
+    try:
+        result = env.reset(level)
+
+        if isinstance(result, dict):
+            return JSONResponse(content=result)
+
+        return JSONResponse(content=result.dict())
+
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Reset failed: {str(e)}"}
+        )
 
 
 # ---------------- STEP ----------------
 @app.post("/step")
 async def step(action: Action):
-    result = env.step(action)
-    return JSONResponse(content=result.dict())
+    try:
+        result = env.step(action)
+
+        if isinstance(result, dict):
+            return JSONResponse(content=result)
+
+        return JSONResponse(content=result.dict())
+
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Step failed: {str(e)}"}
+        )
 
 
 # ---------------- STATE ----------------
 @app.get("/state")
 async def state():
-    return JSONResponse(content=env.state().dict())
+    try:
+        result = env.state()
+
+        if isinstance(result, dict):
+            return JSONResponse(content=result)
+
+        return JSONResponse(content=result.dict())
+
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"State failed: {str(e)}"}
+        )
 
 
 # ---------------- ANALYZE ----------------
@@ -94,7 +141,6 @@ async def analyze(data: dict = Body(...)):
         })
 
     try:
-        # REQUIRED proxy LLM call
         response = client.chat.completions.create(
             model=os.environ.get("MODEL_NAME", "gpt-4o"),
             messages=[
@@ -104,7 +150,7 @@ async def analyze(data: dict = Body(...)):
                         "You are a code analysis assistant. "
                         "Classify the code difficulty as easy, medium, or hard. "
                         "Provide 2-3 suggestions. "
-                        "Return JSON format with keys: difficulty, suggestions."
+                        "Return JSON with keys difficulty and suggestions."
                     )
                 },
                 {
@@ -123,7 +169,10 @@ async def analyze(data: dict = Body(...)):
         })
 
     except Exception as e:
-        return JSONResponse(content={
-            "difficulty": "unknown",
-            "suggestions": [f"Analysis failed: {str(e)}"]
-        })
+        return JSONResponse(
+            status_code=500,
+            content={
+                "difficulty": "unknown",
+                "suggestions": [f"Analysis failed: {str(e)}"]
+            }
+        )
