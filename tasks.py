@@ -1,31 +1,25 @@
-TASKS = {
-    "easy": {
+# tasks.py
+
+TASKS = [
+    {
         "id": "easy",
         "difficulty": "easy",
+        "objective": "Detect syntax errors",
         "grader": "grade_easy",
-        "code": "print('Hello World'",
-        "issue": "missing_parenthesis"
+        "expected_issue": "missing_parenthesis"
     },
-
-    "medium": {
+    {
         "id": "medium",
         "difficulty": "medium",
+        "objective": "Detect runtime errors",
         "grader": "grade_medium",
-        "code": """
-arr = [1, 2, 3]
-for i in range(5):
-    print(arr[i])
-""",
-        "issue": "index_out_of_range"
+        "expected_issue": "index_out_of_range"
     },
-
-    "hard": {
+    {
         "id": "hard",
         "difficulty": "hard",
+        "objective": "Detect security vulnerabilities",
         "grader": "grade_hard",
-        "code": """
-query = "SELECT * FROM users WHERE id=" + user_input
-""",
-        "issue": "sql_injection"
+        "expected_issue": "sql_injection"
     }
-}
+]
