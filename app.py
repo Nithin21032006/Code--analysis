@@ -15,39 +15,38 @@ env = CodeAnalysisEnv()
 templates = Jinja2Templates(directory="templates")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Use injected proxy credentials safely
-client = OpenAI(
-    base_url=os.environ["API_BASE_URL"],
-    api_key=os.environ["API_KEY"]
+# ---------------- SAFE CLIENT INIT ----------------
+API_BASE_URL = os.environ.get(
+    "API_BASE_URL",
+    "https://api.openai.com/v1"
 )
+
+API_KEY = os.environ.get(
+    "API_KEY",
+    os.environ.get("HF_TOKEN", "dummy-key")
+)
+
+MODEL_NAME = os.environ.get(
+    "MODEL_NAME",
+    "gpt-4o"
+)
+
+client = OpenAI(
+    base_url=API_BASE_URL,
+    api_key=API_KEY
+)
+
 
 
 # ---------------- HOME ----------------
 @app.get("/")
 async def home(request: Request):
-    try:
-        state = env.state()
-
-        if isinstance(state, dict):
-            state_data = state
-        else:
-            state_data = state.dict()
-
-        return templates.TemplateResponse(
-            "index.html",
-            {
-                "request": request,
-                "state": state_data
-            }
-        )
-
-    except Exception as e:
-        return JSONResponse(
-            status_code=500,
-            content={"error": f"Home failed: {str(e)}"}
-        )
-
-
+    return templates.TemplateResponse(
+        "index.html",
+        {
+            "request": request
+        }
+    )
 # ---------------- TASK DISCOVERY ----------------
 @app.get("/tasks")
 async def get_tasks():
@@ -142,7 +141,7 @@ async def analyze(data: dict = Body(...)):
 
     try:
         response = client.chat.completions.create(
-            model=os.environ.get("MODEL_NAME", "gpt-4o"),
+            model=MODEL_NAME,
             messages=[
                 {
                     "role": "system",
