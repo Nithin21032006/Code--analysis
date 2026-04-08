@@ -1,13 +1,21 @@
 name: code-analysis-env
 version: 1.0
-description: AI environment for code analysis with easy medium hard tasks
+description: AI environment for code analysis with multiple graded tasks
 
 tasks:
-  - easy
-  - medium
-  - hard
+  - id: easy
+    name: Syntax Error Detection
+    grader: enabled
 
-reward_range: [0.0, 1.0]
+  - id: medium
+    name: Runtime Bug Detection
+    grader: enabled
+
+  - id: hard
+    name: Security Vulnerability Detection
+    grader: enabled
+
+reward_range: [0.01, 0.99]
 
 api:
   reset: /reset
