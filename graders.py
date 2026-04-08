@@ -1,27 +1,34 @@
+def grade_easy(action):
+    issue = action.get("payload", {}).get("issue", "")
+    if issue == "missing_parenthesis":
+        return 0.8, True, "Correct syntax issue detected"
+    return 0.2, False, "Wrong syntax issue"
+
+
+def grade_medium(action):
+    issue = action.get("payload", {}).get("issue", "")
+    if issue == "index_out_of_range":
+        return 0.8, True, "Correct runtime issue detected"
+    return 0.2, False, "Wrong runtime issue"
+
+
+def grade_hard(action):
+    issue = action.get("payload", {}).get("issue", "")
+    if issue == "sql_injection":
+        return 0.8, True, "Correct security issue detected"
+    return 0.2, False, "Wrong security issue"
+
+
 def grade_action(task, action):
-    expected_issue = task["issue"]
-    detected_issue = action.payload.get("issue", "").lower() if action.payload else ""
-    action_type = action.action_type.lower() if hasattr(action, "action_type") else ""
+    difficulty = task["difficulty"]
 
-    # EASY
-    if task["difficulty"] == "easy":
-        if action_type == "analyze_syntax":
-            return 0.5, False, "Syntax analysis started"
-        if detected_issue == expected_issue:
-            return 1.0, True, "Correct syntax issue detected"
+    if difficulty == "easy":
+        return grade_easy(action)
 
-    # MEDIUM
-    elif task["difficulty"] == "medium":
-        if action_type == "analyze_runtime":
-            return 0.4, False, "Potential runtime issue found"
-        if detected_issue == expected_issue:
-            return 1.0, True, "Runtime bug correctly detected"
+    elif difficulty == "medium":
+        return grade_medium(action)
 
-    # HARD
-    elif task["difficulty"] == "hard":
-        if action_type == "security_scan":
-            return 0.4, False, "Security scan completed"
-        if detected_issue == expected_issue:
-            return 1.0, True, "Critical security issue detected"
+    elif difficulty == "hard":
+        return grade_hard(action)
 
-    return 0.0, False, "Incorrect analysis"
+    return 0.1, False, "Unknown task"
