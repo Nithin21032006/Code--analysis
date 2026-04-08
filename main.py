@@ -54,29 +54,8 @@ async def home(request: Request):
 # ---------------- TASK DISCOVERY ----------------
 @app.get("/tasks")
 async def get_tasks():
-    return {
-        "tasks": [
-            {
-                "id": "easy",
-                "grader": "grade_easy",
-                "difficulty": "easy",
-                "score_range": [0.0, 1.0]
-            },
-            {
-                "id": "medium",
-                "grader": "grade_medium",
-                "difficulty": "medium",
-                "score_range": [0.0, 1.0]
-            },
-            {
-                "id": "hard",
-                "grader": "grade_hard",
-                "difficulty": "hard",
-                "score_range": [0.0, 1.0]
-            }
-        ]
-    }
-
+    from tasks import TASKS
+    return {"tasks": TASKS}
 # ---------------- RESET ----------------
 @app.post("/reset")
 async def reset(level: str = "easy"):
