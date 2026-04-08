@@ -7,11 +7,13 @@ BASE_URL = "http://localhost:7860"
 print("[START]")
 
 try:
+    # LiteLLM proxy / fallback OpenAI base URL
     client = OpenAI(
-        base_url=os.environ.get("API_BASE_URL"),
+        base_url=os.environ.get("API_BASE_URL", "https://api.openai.com/v1"),
         api_key=os.environ.get("API_KEY")
     )
 
+    # Safe fallback model
     model_name = os.environ.get("MODEL_NAME", "gpt-4o-mini")
 
     task_codes = {
@@ -33,6 +35,7 @@ try:
     }
 
     for level in ["easy", "medium", "hard"]:
+        # Step 1: Reset environment
         reset_response = requests.post(
             f"{BASE_URL}/reset",
             params={"level": level},
@@ -44,6 +47,7 @@ try:
 
         code = task_codes[level]
 
+        # Step 2: Required LiteLLM proxy call
         llm_response = client.chat.completions.create(
             model=model_name,
             messages=[
@@ -57,11 +61,14 @@ try:
         print("[LLM RESPONSE]")
         print(llm_response.choices[0].message.content)
 
+        # Step 3: Submit step action
         step_response = requests.post(
             f"{BASE_URL}/step",
             json={
                 "action_type": action_map[level],
-                "payload": {"issue": issue_map[level]}
+                "payload": {
+                    "issue": issue_map[level]
+                }
             },
             timeout=10
         )
