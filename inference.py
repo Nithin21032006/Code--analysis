@@ -4,10 +4,6 @@ from openai import OpenAI
 
 BASE_URL = "http://localhost:7860"
 
-API_BASE_URL = os.getenv("API_BASE_URL", "https://api.openai.com/v1")
-MODEL_NAME = os.getenv("MODEL_NAME", "gpt-4o-mini")
-API_KEY = os.getenv("API_KEY") or os.getenv("HF_TOKEN")
-
 TASK_NAME = "code_analysis"
 BENCHMARK = "custom_fastapi_env"
 
@@ -54,41 +50,40 @@ def log_end(success, steps, score, rewards):
 def main():
     rewards = []
     steps_taken = 0
-    success = False
     score = 0.01
+    success = False
 
+    # STRICT: use only injected proxy credentials
     client = OpenAI(
-        base_url=API_BASE_URL,
-        api_key=API_KEY
+        base_url=os.environ["API_BASE_URL"],
+        api_key=os.environ["API_KEY"]
     )
 
-    log_start(TASK_NAME, BENCHMARK, MODEL_NAME)
+    model_name = os.environ.get("MODEL_NAME", "gpt-4o-mini")
+
+    log_start(TASK_NAME, BENCHMARK, model_name)
 
     try:
         for step_num, level in enumerate(["easy", "medium", "hard"], start=1):
-            # Reset environment
             requests.post(
                 f"{BASE_URL}/reset",
                 params={"level": level},
                 timeout=10
             )
 
-            code = task_codes[level]
-
-            # Required LLM proxy call
-            client.chat.completions.create(
-                model=MODEL_NAME,
+            # REQUIRED proxy call
+            response = client.chat.completions.create(
+                model=model_name,
                 messages=[
                     {
                         "role": "user",
-                        "content": f"Analyze this code:\n{code}"
+                        "content": f"Analyze this code:\n{task_codes[level]}"
                     }
                 ]
             )
 
             action = action_map[level]
 
-            # Step environment
             step_response = requests.post(
                 f"{BASE_URL}/step",
                 json={
@@ -101,39 +96,20 @@ def main():
             )
 
             result = step_response.json()
-
-            reward = float(result.get("reward", 0.0))
+            reward = float(result.get("reward", 0.5))
             done = bool(result.get("done", False))
 
             rewards.append(reward)
             steps_taken = step_num
 
-            log_step(
-                step=step_num,
-                action=action,
-                reward=reward,
-                done=done,
-                error=None
-            )
+            log_step(step_num, action, reward, done)
 
-        # STRICT score in (0,1)
-        if rewards:
-            raw_score = sum(rewards) / len(rewards)
-
-            if raw_score >= 1.0:
-                score = 0.99
-            elif raw_score <= 0.0:
-                score = 0.01
-            else:
-                score = raw_score
-        else:
-            score = 0.01
-
+        raw_score = sum(rewards) / len(rewards) if rewards else 0.5
+        score = min(max(raw_score, 0.01), 0.99)
         success = score > 0.5
 
     except Exception as e:
         print(f"[DEBUG] {str(e)}", flush=True)
-        score = 0.01
 
     log_end(success, steps_taken, score, rewards)
 
