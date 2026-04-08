@@ -1,20 +1,16 @@
 TASKS = {
     "easy": {
         "id": "easy",
-        "name": "Syntax Error Detection",
         "difficulty": "easy",
-        "grader": True,
-        "reward_range": [0.01, 0.99],
+        "grader": "grade_easy",
         "code": "print('Hello World'",
         "issue": "missing_parenthesis"
     },
 
     "medium": {
         "id": "medium",
-        "name": "Runtime Bug Detection",
         "difficulty": "medium",
-        "grader": True,
-        "reward_range": [0.01, 0.99],
+        "grader": "grade_medium",
         "code": """
 arr = [1, 2, 3]
 for i in range(5):
@@ -25,10 +21,8 @@ for i in range(5):
 
     "hard": {
         "id": "hard",
-        "name": "Security Vulnerability Detection",
         "difficulty": "hard",
-        "grader": True,
-        "reward_range": [0.01, 0.99],
+        "grader": "grade_hard",
         "code": """
 query = "SELECT * FROM users WHERE id=" + user_input
 """,
