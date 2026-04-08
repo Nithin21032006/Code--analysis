@@ -16,6 +16,7 @@ tasks:
     reward_range: [0.01, 0.99]
 
 api:
+  tasks: /tasks
   reset: /reset
   step: /step
   state: /state
