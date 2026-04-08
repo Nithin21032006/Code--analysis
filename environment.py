@@ -1,42 +1,38 @@
-from models import Observation, EnvState
 from tasks import TASKS
-from graders import grade_action
+from graders import GRADERS
 
 
 class CodeAnalysisEnv:
     def __init__(self):
-        self.task = TASKS["easy"]
-        self.step_count = 0
-        self.total_reward = 0.0
-        self.done = False
+        self.tasks = TASKS
+        self.current_task = None
+
+    def list_tasks(self):
+        return self.tasks
 
     def reset(self, level="easy"):
-        self.task = TASKS[level]
-        self.step_count = 0
-        self.total_reward = 0.0
-        self.done = False
-        return self.state()
+        for task in self.tasks:
+            if task["id"] == level:
+                self.current_task = task
+                return {
+                    "task_id": task["id"],
+                    "difficulty": task["difficulty"],
+                    "objective": task["objective"]
+                }
 
-    def step(self, action):
-        reward, done, feedback = grade_action(self.task, action)
+        return {"error": "Task not found"}
 
-        self.step_count += 1
-        self.total_reward += reward
-        self.done = done
+    def grade(self, level, prediction):
+        for task in self.tasks:
+            if task["id"] == level:
+                grader_name = task["grader"]
+                grader_function = GRADERS[level]
 
-        return Observation(
-            code=self.task["code"],
-            difficulty=self.task["difficulty"],
-            reward=reward,
-            done=done,
-            feedback=feedback
-        )
+                score = grader_function(prediction)
 
-    def state(self):
-        return EnvState(
-            task_id=self.task["id"],
-            difficulty=self.task["difficulty"],
-            step_count=self.step_count,
-            total_reward=self.total_reward,
-            done=self.done
-        )
+                return {
+                    "task_id": level,
+                    "score": score
+                }
+
+        return {"error": "Invalid task"}
