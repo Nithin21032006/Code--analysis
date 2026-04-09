@@ -1,132 +1,159 @@
-def grade_easy(prediction):
+# graders.py
+
+def easy_grader(prediction):
     """
     Grade syntax error detection
-    Score must be strictly between 0 and 1 (not 0.0, not 1.0)
+    Score MUST be strictly between 0 and 1 (not 0.0, not 1.0)
     """
-    expected_issues = ["missing parenthesis", "syntax error", "print statement"]
     issue = prediction.get("issue", "").lower()
     suggestions = prediction.get("suggestions", [])
     
-    # Start with a base score
-    score = 0.01  # Minimum score > 0
+    # Start with base score > 0
+    score = 0.05
     
-    # Check if issue is correctly identified
-    for expected in expected_issues:
-        if expected in issue:
-            score += 0.6  # Brings to 0.61 (valid range)
-            break
+    # Evaluate issue identification (max 0.70)
+    if "missing" in issue and ("parenthesis" in issue or "parentheses" in issue):
+        score += 0.65  # Total: 0.70
+    elif "syntax" in issue:
+        score += 0.55  # Total: 0.60
+    elif "print" in issue:
+        score += 0.45  # Total: 0.50
+    elif "error" in issue:
+        score += 0.35  # Total: 0.40
+    elif "incomplete" in issue:
+        score += 0.25  # Total: 0.30
+    else:
+        score += 0.15  # Total: 0.20 (partial credit)
     
-    # Add points for good suggestions
-    if suggestions and len(suggestions) > 0:
-        score += 0.2  # Brings to 0.81 max
-    
-    # Add small bonus for specific keywords
-    if "parenthesis" in issue or "parentheses" in issue:
-        score += 0.1  # Brings to 0.91 max
+    # Evaluate suggestions quality (max 0.24)
+    if suggestions:
+        suggestion_score = 0
+        for suggestion in suggestions:
+            suggestion_lower = suggestion.lower()
+            if "parenthesis" in suggestion_lower or "closing" in suggestion_lower:
+                suggestion_score += 0.12
+            elif "fix" in suggestion_lower or "correct" in suggestion_lower:
+                suggestion_score += 0.08
+            elif "syntax" in suggestion_lower:
+                suggestion_score += 0.06
+        
+        score += min(suggestion_score, 0.24)  # Max total: 0.94
     
     # Ensure score is strictly between 0 and 1
-    score = min(max(score, 0.01), 0.99)
+    score = max(0.01, min(score, 0.99))
     
     return score
 
 
-def grade_medium(prediction):
+def medium_grader(prediction):
     """
     Grade runtime bug detection
-    Score must be strictly between 0 and 1 (not 0.0, not 1.0)
+    Score MUST be strictly between 0 and 1 (not 0.0, not 1.0)
     """
-    expected_issues = ["index out of range", "out of bounds", "array index", "index error"]
     issue = prediction.get("issue", "").lower()
     suggestions = prediction.get("suggestions", [])
     
-    # Start with a base score
-    score = 0.01  # Minimum score > 0
+    # Start with base score > 0
+    score = 0.05
     
-    # Check if issue is correctly identified
-    issue_score = 0
-    for expected in expected_issues:
-        if expected in issue:
-            issue_score = 0.55
-            break
-        elif "index" in issue and ("range" in issue or "bound" in issue):
-            issue_score = 0.45
+    # Evaluate issue identification (max 0.70)
+    if "index" in issue and ("out of range" in issue or "out of bounds" in issue):
+        score += 0.65  # Total: 0.70
+    elif "index" in issue and "error" in issue:
+        score += 0.55  # Total: 0.60
+    elif "out of range" in issue or "out of bounds" in issue:
+        score += 0.50  # Total: 0.55
+    elif "index" in issue:
+        score += 0.40  # Total: 0.45
+    elif "range" in issue or "bound" in issue:
+        score += 0.35  # Total: 0.40
+    elif "array" in issue:
+        score += 0.30  # Total: 0.35
+    else:
+        score += 0.15  # Total: 0.20 (partial credit)
     
-    score += issue_score
-    
-    # Add points for quality suggestions
-    suggestion_bonus = 0
-    for suggestion in suggestions:
-        if "check" in suggestion.lower() or "verify" in suggestion.lower():
-            suggestion_bonus += 0.1
-        if "try" in suggestion.lower() or "except" in suggestion.lower():
-            suggestion_bonus += 0.1
-        if "len" in suggestion.lower() or "length" in suggestion.lower():
-            suggestion_bonus += 0.1
-    
-    score += min(suggestion_bonus, 0.35)  # Cap at 0.35
+    # Evaluate suggestions quality (max 0.24)
+    if suggestions:
+        suggestion_score = 0
+        for suggestion in suggestions:
+            suggestion_lower = suggestion.lower()
+            if "check length" in suggestion_lower or "verify index" in suggestion_lower:
+                suggestion_score += 0.12
+            elif "try except" in suggestion_lower or "error handling" in suggestion_lower:
+                suggestion_score += 0.10
+            elif "len()" in suggestion_lower or "array length" in suggestion_lower:
+                suggestion_score += 0.08
+            elif "loop" in suggestion_lower:
+                suggestion_score += 0.06
+        
+        score += min(suggestion_score, 0.24)  # Max total: 0.94
     
     # Ensure score is strictly between 0 and 1
-    score = min(max(score, 0.01), 0.99)
+    score = max(0.01, min(score, 0.99))
     
     return score
 
 
-def grade_hard(prediction):
+def hard_grader(prediction):
     """
     Grade security vulnerability detection
-    Score must be strictly between 0 and 1 (not 0.0, not 1.0)
+    Score MUST be strictly between 0 and 1 (not 0.0, not 1.0)
     """
-    expected_issues = ["sql injection", "injection vulnerability", "sql injection vulnerability"]
     issue = prediction.get("issue", "").lower()
     suggestions = prediction.get("suggestions", [])
     
-    # Start with a base score
-    score = 0.01  # Minimum score > 0
+    # Start with base score > 0
+    score = 0.05
     
-    # Check if issue is correctly identified
-    issue_score = 0
-    for expected in expected_issues:
-        if expected in issue:
-            issue_score = 0.5
-            break
-        elif "injection" in issue:
-            issue_score = 0.4
-        elif "sql" in issue or "query" in issue:
-            issue_score = 0.3
+    # Evaluate issue identification (max 0.65)
+    if "sql injection" in issue:
+        score += 0.60  # Total: 0.65
+    elif "injection" in issue and "sql" in issue:
+        score += 0.55  # Total: 0.60
+    elif "injection" in issue:
+        score += 0.45  # Total: 0.50
+    elif "sql" in issue or "query" in issue:
+        score += 0.35  # Total: 0.40
+    elif "vulnerability" in issue or "security" in issue:
+        score += 0.30  # Total: 0.35
+    elif "input" in issue:
+        score += 0.25  # Total: 0.30
+    else:
+        score += 0.15  # Total: 0.20 (partial credit)
     
-    score += issue_score
-    
-    # Check suggestions for security best practices
-    security_keywords = {
-        "parameterized": 0.15,
-        "prepared statement": 0.15,
-        "sanitize": 0.12,
-        "validation": 0.12,
-        "escape": 0.10,
-        "input validation": 0.10,
-        "orm": 0.08,
-        "bind variable": 0.08
-    }
-    
-    suggestion_score = 0
-    for suggestion in suggestions:
-        suggestion_lower = suggestion.lower()
-        for keyword, points in security_keywords.items():
-            if keyword in suggestion_lower:
-                suggestion_score += points
-                break  # Only count highest match per suggestion
-    
-    score += min(suggestion_score, 0.4)  # Cap at 0.4
+    # Evaluate security suggestions (max 0.29)
+    if suggestions:
+        security_score = 0
+        for suggestion in suggestions:
+            suggestion_lower = suggestion.lower()
+            if "parameterized" in suggestion_lower or "prepared statement" in suggestion_lower:
+                security_score += 0.15
+            elif "sanitize" in suggestion_lower:
+                security_score += 0.12
+            elif "validate" in suggestion_lower or "validation" in suggestion_lower:
+                security_score += 0.10
+            elif "escape" in suggestion_lower:
+                security_score += 0.08
+            elif "best practice" in suggestion_lower:
+                security_score += 0.06
+        
+        score += min(security_score, 0.29)  # Max total: 0.94
     
     # Ensure score is strictly between 0 and 1
-    score = min(max(score, 0.01), 0.99)
+    score = max(0.01, min(score, 0.99))
     
     return score
 
 
-# Graders dictionary - MUST have at least 3 tasks
+# Dictionary for programmatic access
 GRADERS = {
-    "easy": grade_easy,
-    "medium": grade_medium,
-    "hard": grade_hard
+    "easy": easy_grader,
+    "medium": medium_grader,
+    "hard": hard_grader,
+    "easy_grader": easy_grader,
+    "medium_grader": medium_grader,
+    "hard_grader": hard_grader
 }
+
+# List all available grader names for enumeration
+ALL_GRADERS = ["easy_grader", "medium_grader", "hard_grader"]
