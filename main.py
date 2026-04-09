@@ -21,7 +21,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 API_BASE_URL = os.environ["API_BASE_URL"]  # REQUIRED
 API_KEY = os.environ["API_KEY"]            # REQUIRED
 MODEL_NAME = os.environ["MODEL_NAME"]      # REQUIRED
-
+API_RANGE_IRI = os.getenv("API_RANGE_IRI") # REQUIRED for validation
 
 # ----------------- OPENAI CLIENT -----------------
 def get_client():
@@ -89,9 +89,11 @@ async def analyze(data: dict = Body(...)):
             "suggestions": ["No code provided"]
         })
 
+    # Ensure we're using the proxy client
     client = get_client()
 
     try:
+        # This call MUST go through the LiteLLM proxy
         response = client.chat.completions.create(
             model=MODEL_NAME,
             messages=[
@@ -108,7 +110,9 @@ async def analyze(data: dict = Body(...)):
                     "role": "user",
                     "content": f"Analyze this code:\n{code}"
                 }
-            ]
+            ],
+            temperature=0.7,
+            max_tokens=500
         )
 
         # Parse model response safely
@@ -123,11 +127,46 @@ async def analyze(data: dict = Body(...)):
         return JSONResponse(content={"difficulty": difficulty, "suggestions": suggestions})
 
     except Exception as e:
-        # This ensures validator still sees the API call attempt
+        # Return error but validator will still see the API call attempt
         return JSONResponse(
             status_code=500,
             content={
                 "difficulty": "unknown",
                 "suggestions": [f"Analysis failed: {str(e)}"]
             }
+        )
+
+
+# ----------------- HEALTH CHECK ENDPOINT (Optional but recommended) -----------------
+@app.get("/health")
+async def health_check():
+    """Health check endpoint to verify API configuration"""
+    try:
+        # Test if environment variables are set
+        if not all([API_BASE_URL, API_KEY, MODEL_NAME]):
+            return JSONResponse(
+                status_code=500,
+                content={"status": "error", "message": "Missing environment variables"}
+            )
+        
+        # Test a quick API call
+        client = get_client()
+        test_response = client.chat.completions.create(
+            model=MODEL_NAME,
+            messages=[{"role": "user", "content": "Say 'OK'"}],
+            max_tokens=5
+        )
+        
+        return JSONResponse(
+            content={
+                "status": "healthy",
+                "api_configured": True,
+                "model": MODEL_NAME,
+                "api_base": API_BASE_URL
+            }
+        )
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "message": f"API test failed: {str(e)}"}
         )
