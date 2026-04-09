@@ -1,16 +1,31 @@
-# Code Analysis OpenEnv
+# Code Review Assistant Environment
 
-This environment evaluates AI agents on code analysis tasks.
+A realistic OpenEnv environment where AI agents learn to review code, identify issues, and suggest fixes.
 
-## Levels
-- Easy → Syntax error detection
-- Medium → Runtime bug detection
-- Hard → Security vulnerability detection
+## Real-World Utility
 
-## API
-- POST /reset
-- POST /step
-- GET /state
+Code review is a daily task for software engineers. This environment trains agents to:
+- Find syntax errors and style violations
+- Detect logic bugs and performance issues
+- Identify security vulnerabilities
+- Provide constructive feedback
 
-## Run
-uvicorn app:app --reload
+## Tasks
+
+### Easy: Syntax & Style Review
+- Find missing colons, imports, PEP 8 violations
+- 0.01-0.99 scoring range
+
+### Medium: Logic & Performance Review
+- Detect off-by-one errors, edge cases, inefficiencies
+- Bonus for fix suggestions
+
+### Hard: Security & Architecture Review
+- SQL injection, XSS, authentication flaws
+- Critical severity gets higher rewards
+
+## Setup
+
+```bash
+docker build -t code-review-env .
+docker run -p 7860:7860 code-review-env
