@@ -1,3 +1,14 @@
+---
+title: Code Review Assistant
+emoji: 🔍
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+sdk_version: "1.0"
+app_file: main.py
+pinned: false
+---
+
 # Code Review Assistant Environment
 
 A realistic OpenEnv environment where AI agents learn to review code, identify issues, and suggest fixes.
@@ -6,7 +17,7 @@ A realistic OpenEnv environment where AI agents learn to review code, identify i
 
 Code review is a daily task for software engineers. This environment trains agents to:
 - Find syntax errors and style violations
-- Detect logic bugs and performance issues
+- Detect logic bugs and performance issues  
 - Identify security vulnerabilities
 - Provide constructive feedback
 
@@ -14,18 +25,27 @@ Code review is a daily task for software engineers. This environment trains agen
 
 ### Easy: Syntax & Style Review
 - Find missing colons, imports, PEP 8 violations
-- 0.01-0.99 scoring range
+- Score range: 0.01-0.99 (strictly between 0 and 1)
 
 ### Medium: Logic & Performance Review
 - Detect off-by-one errors, edge cases, inefficiencies
-- Bonus for fix suggestions
+- Bonus points for fix suggestions
 
 ### Hard: Security & Architecture Review
 - SQL injection, XSS, authentication flaws
-- Critical severity gets higher rewards
+- Critical severity issues give higher rewards
 
-## Setup
+## Setup Instructions
+
+### Local Development
 
 ```bash
-docker build -t code-review-env .
-docker run -p 7860:7860 code-review-env
+# Clone the repository
+git clone https://github.com/Nithin21032006/Code--analysis
+cd Code--analysis
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run the FastAPI server
+uvicorn main:app --reload --port 7860
