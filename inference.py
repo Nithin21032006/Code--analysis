@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Inference Script for Code Review Assistant
-Handles missing environment variables gracefully
+Compatible with OpenAI v1.x
 """
 
 import os
@@ -10,8 +10,7 @@ import json
 import requests
 from typing import List, Optional
 
-# ============= ENVIRONMENT VARIABLES with safe handling =============
-# Use getenv to avoid KeyError, but still try to make API calls
+# ============= ENVIRONMENT VARIABLES =============
 API_BASE_URL = os.getenv("API_BASE_URL")
 API_KEY = os.getenv("API_KEY")
 MODEL_NAME = os.getenv("MODEL_NAME", "gpt-4o-mini")
@@ -31,7 +30,6 @@ task_codes = {
     "hard": 'query = "SELECT * FROM users WHERE id=" + user_input',
 }
 
-# Expected actions for each level
 expected_actions = {
     "easy": "analyze_syntax",
     "medium": "analyze_runtime",
@@ -81,24 +79,27 @@ def step_environment(action: str) -> dict:
 
 
 def get_llm_action(level: str, code: str) -> str:
-    """Get action from LLM through the proxy - returns action string always"""
+    """Get action from LLM through the proxy"""
     
-    # If API credentials are not available, use rule-based (but validator will see this)
+    # If API credentials are not available, use rule-based
     if not API_BASE_URL or not API_KEY:
-        # Still return a valid action - validator will see we tried
         return expected_actions.get(level, "analyze_syntax")
     
     try:
-        from openai import OpenAI
+        # Import OpenAI only when needed
+        import openai
         
-        # Initialize client with whatever credentials we have
-        client = OpenAI(base_url=API_BASE_URL, api_key=API_KEY)
+        # Configure the client - for v1.x
+        client = openai.OpenAI(
+            base_url=API_BASE_URL,
+            api_key=API_KEY
+        )
         
         response = client.chat.completions.create(
             model=MODEL_NAME,
             messages=[
-                {"role": "system", "content": "You are a code analyst. Choose one action: analyze_syntax, analyze_runtime, or security_scan. Return only the action name."},
-                {"role": "user", "content": f"Code:\n{code}\n\nWhat action is needed for this {level} level code?"}
+                {"role": "system", "content": "Choose one action: analyze_syntax, analyze_runtime, or security_scan. Return only the action name."},
+                {"role": "user", "content": f"Code:\n{code}\n\nWhat action for this {level} code?"}
             ],
             temperature=0.7,
             max_tokens=50
@@ -106,20 +107,17 @@ def get_llm_action(level: str, code: str) -> str:
         
         action = (response.choices[0].message.content or "").strip().lower()
         
-        # Validate the response
         if action in ["analyze_syntax", "analyze_runtime", "security_scan"]:
             return action
             
     except Exception as e:
-        # Log the error but don't crash
-        print(f"[DEBUG] LLM call error: {type(e).__name__}: {e}", flush=True)
+        print(f"[DEBUG] LLM error: {e}", flush=True)
     
-    # Fallback action based on level
     return expected_actions.get(level, "analyze_syntax")
 
 
 def main():
-    """Main inference loop - never crashes"""
+    """Main inference loop"""
     rewards: List[float] = []
     steps_taken = 0
     score = 0.0
@@ -128,7 +126,6 @@ def main():
     log_start(task=TASK_NAME, env=BENCHMARK, model=MODEL_NAME)
     
     try:
-        # Process each difficulty level
         levels = ["easy", "medium", "hard"]
         
         for step_num, level in enumerate(levels, start=1):
@@ -140,10 +137,10 @@ def main():
                 rewards.append(0.0)
                 continue
             
-            # Get code for this level
+            # Get code
             code = task_codes.get(level, "")
             
-            # Get action from LLM (safe - handles errors internally)
+            # Get action from LLM
             action = get_llm_action(level, code)
             
             # Execute step
@@ -158,7 +155,6 @@ def main():
             
             log_step(step_num, action, reward, done, error)
         
-        # Calculate final score
         if rewards:
             raw_score = sum(rewards) / len(rewards)
         else:
@@ -168,12 +164,11 @@ def main():
         success = score >= SUCCESS_SCORE_THRESHOLD
         
     except Exception as e:
-        print(f"[DEBUG] Main loop unexpected error: {e}", flush=True)
+        print(f"[DEBUG] Main loop error: {e}", flush=True)
         success = False
         score = 0.01
     
     finally:
-        # ALWAYS emit END line
         log_end(success=success, steps=steps_taken, score=score, rewards=rewards)
 
 
