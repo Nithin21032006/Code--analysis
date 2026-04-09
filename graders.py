@@ -49,12 +49,16 @@ def grade_medium(prediction):
         correct_finds = 0
         for issue in issues_found:
             issue_text = issue.get("description", "").lower()
+            matched = False
+            
             for expected in expected_issues:
                 if expected in issue_text:
                     correct_finds += 0.30
+                    matched = True
                     break
+            
             # Partial credit for being close
-            elif "logic" in issue_text or "bug" in issue_text:
+            if not matched and ("logic" in issue_text or "bug" in issue_text):
                 correct_finds += 0.15
         
         score += min(correct_finds, 0.65)
@@ -64,7 +68,11 @@ def grade_medium(prediction):
     if suggestions:
         quality_bonus = 0
         for suggestion in suggestions:
-            text = suggestion.get("text", "").lower()
+            if isinstance(suggestion, dict):
+                text = suggestion.get("text", "").lower()
+            else:
+                text = str(suggestion).lower()
+                
             if "fix" in text or "solution" in text:
                 quality_bonus += 0.06
             if "edge case" in text or "boundary" in text:
@@ -117,7 +125,11 @@ def grade_hard(prediction):
                          "sanitize", "validate", "authentication", "encrypt"]
         
         for suggestion in suggestions:
-            text = suggestion.get("text", "").lower()
+            if isinstance(suggestion, dict):
+                text = suggestion.get("text", "").lower()
+            else:
+                text = str(suggestion).lower()
+                
             for term in security_terms:
                 if term in text:
                     security_bonus += 0.10
@@ -128,6 +140,7 @@ def grade_hard(prediction):
     return min(max(score, 0.01), 0.99)
 
 
+# Graders dictionary for programmatic access
 GRADERS = {
     "easy": grade_easy,
     "medium": grade_medium,
