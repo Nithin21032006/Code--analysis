@@ -1,165 +1,176 @@
-# environment.py
-from tasks import TASKS, get_task, get_all_tasks
-from graders import GRADERS, ALL_GRADERS
+import os
+from typing import Dict, Any, Optional
+from models import CodeReviewAction, CodeReviewObservation, PRFile, StepResult
+from tasks import TASKS, get_task
+from graders import GRADERS
 
 
-class CodeAnalysisEnv:
+class CodeReviewEnv:
     def __init__(self):
-        self.tasks = TASKS
         self.current_task = None
-        self.current_level = None
+        self.current_file_index = 0
+        self.issues_found = []
+        self.review_complete = False
         self.step_count = 0
-
-    def list_tasks(self):
-        """
-        Enumerate all tasks - validator calls this
-        Must return list of tasks with grader information
-        """
-        tasks_list = []
-        for task in self.tasks:
-            tasks_list.append({
-                "id": task["id"],
-                "name": task["name"],
-                "difficulty": task["difficulty"],
-                "objective": task["objective"],
-                "grader_name": task.get("grader_name", f"{task['id']}_grader")
-            })
-        return tasks_list
-
-    def get_grader(self, task_id):
-        """Get grader function for a specific task"""
-        task = get_task(task_id)
-        if task:
-            grader_name = task.get("grader_name", f"{task_id}_grader")
-            return GRADERS.get(grader_name)
-        return None
-
-    def reset(self, level="easy"):
-        """Reset environment for a specific level/task"""
+        
+    def reset(self, level: str = "easy") -> Dict[str, Any]:
+        """Reset environment to initial state"""
         task = get_task(level)
-        if task:
-            self.current_task = task
-            self.current_level = level
-            self.step_count = 0
-            
-            return {
-                "task_id": task["id"],
-                "difficulty": task["difficulty"],
-                "objective": task["objective"],
-                "code": task.get("sample_code", ""),
-                "status": "reset",
-                "grader_name": task.get("grader_name", f"{level}_grader")
-            }
+        if not task:
+            return {"error": f"Task '{level}' not found"}
         
-        return {"error": f"Task '{level}' not found"}
-
-    def grade(self, level, prediction):
-        """
-        Grade a prediction - validator calls this for each task
-        Must return score strictly between 0 and 1
-        """
-        # Find the grader function
-        grader_func = self.get_grader(level)
+        self.current_task = task
+        self.current_file_index = 0
+        self.issues_found = []
+        self.review_complete = False
+        self.step_count = 0
         
-        if not grader_func:
-            # Fallback: try direct mapping
-            if level == "easy":
-                from graders import easy_grader
-                grader_func = easy_grader
-            elif level == "medium":
-                from graders import medium_grader
-                grader_func = medium_grader
-            elif level == "hard":
-                from graders import hard_grader
-                grader_func = hard_grader
-            else:
-                return {
-                    "task_id": level,
-                    "score": 0.50,  # Default middle score
-                    "error": f"No grader found for task '{level}'"
-                }
+        # Build initial observation
+        sample_pr = task["sample_pr"]
+        files = [
+            PRFile(
+                filename=f["filename"],
+                content=f["content"],
+                changes=f"Added {len(f['content'].splitlines())} lines",
+                additions=len(f["content"].splitlines()),
+                deletions=0
+            )
+            for f in sample_pr["files"]
+        ]
         
-        try:
-            # Execute the grader
-            score = grader_func(prediction)
-            
-            # Ensure score is strictly between 0 and 1
-            score = max(0.01, min(score, 0.99))
-            
-            return {
-                "task_id": level,
-                "score": score,
-                "status": "graded"
-            }
-        except Exception as e:
-            return {
-                "task_id": level,
-                "score": 0.50,
-                "error": f"Grading error: {str(e)}"
-            }
-
-    def step(self, action_type, payload=None):
-        """Execute a step (for main.py)"""
-        if payload is None:
-            payload = {}
+        observation = {
+            "pr_title": sample_pr["title"],
+            "pr_description": sample_pr["description"],
+            "files_changed": [f.dict() for f in files],
+            "current_file_index": 0,
+            "task_level": level,
+            "issues_found_so_far": 0,
+            "total_expected_issues": len(sample_pr["files"][0].get("issues", [])),
+            "review_complete": False
+        }
         
+        return observation
+    
+    def step(self, action: Dict[str, Any]) -> Dict[str, Any]:
+        """Execute one step of review"""
         self.step_count += 1
         
-        # Validate action matches level
-        expected_actions = {
-            "easy": "analyze_syntax",
-            "medium": "analyze_runtime",
-            "hard": "security_scan"
-        }
+        # Parse action
+        action_obj = CodeReviewAction(**action)
         
-        expected = expected_actions.get(self.current_level)
-        
-        if expected and action_type != expected:
-            return {
-                "reward": 0.05,  # Low but > 0
-                "done": True,
-                "info": {"error": f"Wrong action. Expected {expected}, got {action_type}"}
-            }
-        
-        # Grade using the grade method
-        prediction = {
-            "issue": payload.get("issue", ""),
-            "suggestions": payload.get("suggestions", [])
-        }
-        
-        result = self.grade(self.current_level, prediction)
-        
-        if "score" in result:
-            return {
-                "reward": result["score"],
-                "done": True,
-                "info": {
-                    "message": f"Analysis completed for {self.current_level}",
-                    "score": result["score"]
-                }
-            }
+        # Process based on action type
+        if action_obj.action_type == "review":
+            reward, info = self._process_review(action_obj)
+        elif action_obj.action_type == "suggest_fix":
+            reward, info = self._process_suggestion(action_obj)
+        elif action_obj.action_type == "approve":
+            reward, info = self._approve()
+        elif action_obj.action_type == "reject":
+            reward, info = self._reject()
         else:
-            return {
-                "reward": 0.50,
-                "done": True,
-                "info": {"error": result.get("error", "Grading failed")}
-            }
-
-    def state(self):
-        """Get current state"""
-        if not self.current_task:
-            return {
-                "status": "not_initialized",
-                "code": "",
-                "difficulty": None,
-                "step_count": 0
-            }
+            reward, info = 0.1, {"error": "Unknown action"}
+        
+        # Check if review is complete
+        done = self.review_complete or self.step_count >= 20
+        
+        # Get current observation
+        observation = self._get_observation()
         
         return {
-            "status": "active",
-            "task_id": self.current_task.get("id"),
-            "difficulty": self.current_task.get("difficulty"),
-            "objective": self.current_task.get("objective"),
-            "code": self.current_task.get("sample_code", ""),
-            "step_count": self.step_count
+            "observation": observation,
+            "reward": reward,
+            "done": done,
+            "info": info
         }
+    
+    def _process_review(self, action: CodeReviewAction) -> tuple:
+        """Process a review action and calculate reward"""
+        current_file = self.current_task["sample_pr"]["files"][self.current_file_index]
+        expected_issues = current_file.get("issues", [])
+        
+        # Check if this issue was already found
+        issue_key = f"{action.line_number}_{action.comment[:50]}"
+        if issue_key in self.issues_found:
+            return 0.01, {"message": "Duplicate issue", "penalty": True}
+        
+        # Check if issue matches expected
+        matched = False
+        for expected in expected_issues:
+            if expected["line"] == action.line_number:
+                # Check if description matches
+                if any(keyword in action.comment.lower() 
+                       for keyword in expected["description"].lower().split()):
+                    matched = True
+                    self.issues_found.append(issue_key)
+                    # Reward based on severity
+                    severity_bonus = {"critical": 0.3, "error": 0.2, 
+                                     "warning": 0.1, "nitpick": 0.05}
+                    reward = severity_bonus.get(action.severity, 0.1)
+                    return reward, {"message": "Issue correctly identified!"}
+        
+        if not matched:
+            # False positive - small penalty
+            return 0.02, {"message": "Issue not found or incorrect", "false_positive": True}
+        
+        return 0.05, {"message": "Review processed"}
+    
+    def _process_suggestion(self, action: CodeReviewAction) -> tuple:
+        """Process a fix suggestion"""
+        if action.suggested_fix:
+            # Reward for providing a fix
+            fix_length = len(action.suggested_fix)
+            reward = min(0.1 + (fix_length / 1000), 0.2)
+            return reward, {"message": "Fix suggestion recorded"}
+        return 0.03, {"message": "Empty suggestion"}
+    
+    def _approve(self) -> tuple:
+        """Approve the PR"""
+        # Calculate final score based on issues found vs expected
+        current_file = self.current_task["sample_pr"]["files"][0]
+        expected_count = len(current_file.get("issues", []))
+        found_count = len(self.issues_found)
+        
+        if found_count >= expected_count:
+            reward = 0.9
+            self.review_complete = True
+        elif found_count >= expected_count * 0.7:
+            reward = 0.7
+            self.review_complete = True
+        elif found_count >= expected_count * 0.5:
+            reward = 0.5
+            self.review_complete = True
+        else:
+            reward = 0.3
+            self.review_complete = True
+        
+        return reward, {"message": "PR approved", "issues_found": found_count, 
+                       "expected_issues": expected_count}
+    
+    def _reject(self) -> tuple:
+        """Reject the PR with feedback"""
+        reward = 0.1
+        self.review_complete = True
+        return reward, {"message": "PR rejected - needs more work"}
+    
+    def _get_observation(self) -> Dict[str, Any]:
+        """Get current observation state"""
+        current_file = self.current_task["sample_pr"]["files"][self.current_file_index]
+        
+        return {
+            "pr_title": self.current_task["sample_pr"]["title"],
+            "pr_description": self.current_task["sample_pr"]["description"],
+            "files_changed": [current_file],
+            "current_file_index": self.current_file_index,
+            "task_level": self.current_task["difficulty"],
+            "issues_found_so_far": len(self.issues_found),
+            "total_expected_issues": len(current_file.get("issues", [])),
+            "review_complete": self.review_complete
+        }
+    
+    def state(self) -> Dict[str, Any]:
+        """Get current environment state"""
+        return self._get_observation()
+    
+    def close(self):
+        """Clean up resources"""
+        pass
