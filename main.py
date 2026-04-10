@@ -67,17 +67,15 @@ async def state():
 
 @app.get("/tasks")
 async def get_tasks():
-    from tasks import TASKS
-    tasks_list = []
-    for task in TASKS:
-        tasks_list.append({
-            "id": task["id"],
-            "name": task["name"],
-            "difficulty": task["difficulty"],
-            "objective": task["objective"]
-        })
-    return {"tasks": tasks_list}
+    """List all tasks with their graders"""
+    tasks = env.list_tasks()
+    return {"tasks": tasks}
 
+@app.post("/grade")
+async def grade_task(level: str, prediction: dict):
+    """Grade endpoint for validator"""
+    result = env.grade(level, prediction)
+    return JSONResponse(content=result)
 
 @app.post("/analyze")
 async def analyze(data: dict = Body(...)):
