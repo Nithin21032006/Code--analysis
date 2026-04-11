@@ -65,22 +65,17 @@ async def state():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/debug/tasks")
-async def debug_tasks():
+@app.get("/openenv/tasks")
+async def openenv_tasks():
+    """OpenEnv compatible tasks endpoint"""
     from tasks import TASKS
-    from graders import GRADERS
-    return {
-        "tasks_count": len(TASKS),
-        "graders_count": len(GRADERS),
-        "tasks": TASKS,
-        "graders_keys": list(GRADERS.keys())
-    }
+    return {"tasks": TASKS}
 
-@app.post("/grade")
-async def grade_task(level: str, prediction: dict):
-    """Grade endpoint for validator"""
-    result = env.grade(level, prediction)
-    return JSONResponse(content=result)
+@app.get("/openenv/graders")
+async def openenv_graders():
+    """List available graders"""
+    from graders import GRADERS
+    return {"graders": list(GRADERS.keys())}
 
 @app.post("/analyze")
 async def analyze(data: dict = Body(...)):
