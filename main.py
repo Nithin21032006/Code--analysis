@@ -65,11 +65,16 @@ async def state():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/tasks")
-async def get_tasks():
-    """List all tasks with their graders"""
-    tasks = env.list_tasks()
-    return {"tasks": tasks}
+@app.get("/debug/tasks")
+async def debug_tasks():
+    from tasks import TASKS
+    from graders import GRADERS
+    return {
+        "tasks_count": len(TASKS),
+        "graders_count": len(GRADERS),
+        "tasks": TASKS,
+        "graders_keys": list(GRADERS.keys())
+    }
 
 @app.post("/grade")
 async def grade_task(level: str, prediction: dict):
