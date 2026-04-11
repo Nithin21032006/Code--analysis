@@ -1,47 +1,3 @@
-Hugging Face's logo
-Hugging Face
-Models
-Datasets
-Spaces
-Buckets
-new
-Docs
-Enterprise
-Pricing
-
-
-Spaces:
-Nithu007
-/
-Code-lens
-
-
-like
-0
-
-Logs
-App
-Files
-Community
-Settings
-Code-lens
-/
-uv.lock
-
-Nithu007's picture
-Nithu007
-Upload 2 files
-b12e82d
-verified
-5 days ago
-raw
-
-Copy download link
-history
-blame
-edit
-delete
-127 kB
 version = 1
 revision = 3
 requires-python = ">=3.10"
@@ -647,4 +603,3 @@ sdist = { url = "https://files.pythonhosted.org/packages/62/f2/368268300fb8af337
 wheels = [
     { url = "https://files.pythonhosted.org/packages/55/df/0cf5b0c451602748fdc7a702d4667f6e209bf96aa6e3160d754234445f2a/uvicorn-0.43.0-py3-none-any.whl", hash = "sha256:46fac64f487fd968cd999e5e49efbbe64bd231b5bd8b4a0b482a23ebce499620", size = 68591, upload-time = "2026-04-03T18:37:47.64Z" },
 ]
-

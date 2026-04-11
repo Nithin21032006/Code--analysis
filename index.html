@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>CodeLens — Intelligent Python Analysis</title>
+    
+    <!-- CodeMirror 5 CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
+    
+    <!-- Google Fonts & Font Awesome Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <!-- External CSS from static folder -->
+    <link rel="stylesheet" href="/static/style.css">
+    
+    <!-- CodeMirror 5 JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/python/python.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="hero">
+            <h1>
+                <i class="fas fa-code-branch"></i> 
+                CodeLens
+            </h1>
+            <div class="badge">
+                <i class="fas fa-robot"></i> AI-Powered Analysis · Python
+            </div>
+        </div>
+
+        <div class="dashboard">
+            <!-- Editor Section -->
+            <div class="editor-panel">
+                <div class="panel-header">
+                    <i class="fas fa-terminal"></i> 
+                    <span>Interactive Editor</span>
+                    <span class="badge-small">
+                        <i class="fas fa-magic"></i> Python 3
+                    </span>
+                </div>
+                <textarea id="codeArea"># Welcome to CodeLens ✨
+# Paste or write your Python code below.
+# Hit "Analyze Code" for instant insights!
+
+def fibonacci(n):
+    """Return the nth Fibonacci number."""
+    if n <= 1:
+        return n
+    else:
+        return fibonacci(n-1) + fibonacci(n-2)
+
+result = fibonacci(10)
+print(f"Fibonacci(10) = {result}")
+
+# Try adding more complex logic, loops, or classes.
+</textarea>
+                <div class="action-bar">
+                    <button id="resetBtn" class="btn-secondary"><i class="fas fa-undo-alt"></i> Reset Example</button>
+                    <button id="analyzeBtn" class="btn-primary"><i class="fas fa-chart-line"></i> Analyze Code</button>
+                </div>
+            </div>
+
+            <!-- Analysis Panel -->
+            <div class="analysis-panel">
+                <div class="panel-header analysis-header-fixed">
+                    <i class="fas fa-lightbulb"></i>
+                    <span>Analysis Report</span>
+                    <i class="fas fa-microchip" style="margin-left: auto; font-size: 0.7rem; opacity: 0.7;"></i>
+                </div>
+                <div id="outputContainer" class="output-content">
+                    <div class="empty-state">
+                        <i class="fas fa-chart-simple"></i>
+                        <span>Ready for analysis — click the analyze button</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="footer-note">
+            <i class="fas fa-shield-alt"></i> Real-time complexity hints · Best practices · Code quality suggestions
+        </div>
+    </div>
+
+    <script>
+        // Initialize CodeMirror with enhanced settings
+        const textarea = document.getElementById("codeArea");
+        const editor = CodeMirror.fromTextArea(textarea, {
+            lineNumbers: true,
+            mode: "python",
+            theme: "dracula",
+            indentUnit: 4,
+            tabSize: 4,
+            lineWrapping: true,
+            autofocus: true,
+            extraKeys: {
+                "Ctrl-Enter": function(cm) {
+                    analyzeCode();
+                },
+                "Cmd-Enter": function(cm) {
+                    analyzeCode();
+                }
+            }
+        });
+        
+        // DOM elements
+        const analyzeBtn = document.getElementById("analyzeBtn");
+        const resetBtn = document.getElementById("resetBtn");
+        const outputContainer = document.getElementById("outputContainer");
+
+        // Default example code
+        const defaultCode = `# Welcome to CodeLens ✨
+# Paste or write your Python code below.
+# Hit "Analyze Code" for instant insights!
+
+def fibonacci(n):
+    """Return the nth Fibonacci number."""
+    if n <= 1:
+        return n
+    else:
+        return fibonacci(n-1) + fibonacci(n-2)
+
+result = fibonacci(10)
+print(f"Fibonacci(10) = {result}")
+
+# Try adding more complex logic, loops, or classes.
+`;
+
+        // Helper: render analysis output with smooth UI
+        function renderAnalysis(data) {
+            if (!data || typeof data.difficulty === 'undefined') {
+                outputContainer.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span>Unexpected response format. Try again.</span>
+                    </div>
+                `;
+                return;
+            }
+
+            const difficultyRaw = (data.difficulty || "unknown").toLowerCase();
+            let difficultyClass = "difficulty-medium";
+            let difficultyIcon = "fa-chart-line";
+            if (difficultyRaw === "easy") {
+                difficultyClass = "difficulty-easy";
+                difficultyIcon = "fa-seedling";
+            } else if (difficultyRaw === "medium") {
+                difficultyClass = "difficulty-medium";
+                difficultyIcon = "fa-chart-simple";
+            } else if (difficultyRaw === "hard") {
+                difficultyClass = "difficulty-hard";
+                difficultyIcon = "fa-mountain";
+            }
+
+            let suggestionsArray = data.suggestions || [];
+            if (!Array.isArray(suggestionsArray)) {
+                suggestionsArray = [];
+            }
+            
+            let suggestionsHtml = '';
+            if (suggestionsArray.length === 0) {
+                suggestionsHtml = `<div class="empty-state" style="padding: 1rem 0;"><i class="fas fa-check-circle"></i> No specific suggestions — code looks clean!</div>`;
+            } else {
+                suggestionsHtml = `<ul class="suggestions-list">` + 
+                    suggestionsArray.map(sugg => `<li><i class="fas fa-code-branch"></i><span>${escapeHtml(sugg)}</span></li>`).join('') +
+                    `</ul>`;
+            }
+
+            const difficultyDisplay = (data.difficulty || "Unknown").toUpperCase();
+            
+            const fullHtml = `
+                <div class="difficulty-tag ${difficultyClass}">
+                    <i class="fas ${difficultyIcon}"></i> 
+                    <span>Complexity · ${difficultyDisplay}</span>
+                </div>
+                <div class="suggestions-title">
+                    <i class="fas fa-list-check"></i> 
+                    INTELLIGENT RECOMMENDATIONS
+                </div>
+                ${suggestionsHtml}
+                <div style="margin-top: 1rem; font-size: 0.7rem; opacity:0.5; text-align:right;">
+                    <i class="fas fa-microphone"></i> AI analysis
+                </div>
+            `;
+            
+            outputContainer.innerHTML = fullHtml;
+        }
+
+        // Simple XSS escape helper
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
+                return c;
+            });
+        }
+
+        // Show loading state in analysis panel
+        function setLoadingState() {
+            outputContainer.innerHTML = `
+                <div class="empty-state" style="gap: 1rem;">
+                    <div class="spinner"></div>
+                    <span>Analyzing code patterns...</span>
+                    <span style="font-size: 0.7rem;">scanning complexity, style & best practices</span>
+                </div>
+            `;
+        }
+
+        // Core analyze function with POST request
+        async function analyzeCode() {
+            const code = editor.getValue();
+            if (!code || code.trim() === "") {
+                outputContainer.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-ban" style="color:#F87171;"></i>
+                        <span>Cannot analyze empty code — please write some Python code first.</span>
+                    </div>
+                `;
+                return;
+            }
+            
+            setLoadingState();
+            
+            try {
+                const response = await fetch("/analyze", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ code: code })
+                });
+                
+                if (!response.ok) {
+                    let errorMsg = `Server responded with status ${response.status}`;
+                    try {
+                        const errData = await response.json();
+                        errorMsg = errData.message || errData.error || errorMsg;
+                    } catch(e) {}
+                    throw new Error(errorMsg);
+                }
+                
+                const data = await response.json();
+                renderAnalysis(data);
+            } catch (err) {
+                console.error("Analysis fetch error:", err);
+                outputContainer.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-bug"></i>
+                        <span>Analysis failed: ${escapeHtml(err.message)}</span>
+                        <span style="font-size: 0.7rem;">Make sure backend is running at /analyze endpoint</span>
+                    </div>
+                `;
+            }
+        }
+        
+        // Reset editor content to default example
+        function resetToExample() {
+            editor.setValue(defaultCode);
+            outputContainer.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-chart-simple"></i>
+                    <span>Example loaded — press "Analyze Code" to see insights</span>
+                </div>
+            `;
+            editor.focus();
+        }
+        
+        // Attach event listeners
+        analyzeBtn.addEventListener("click", analyzeCode);
+        resetBtn.addEventListener("click", resetToExample);
+        
+        // Ensure editor has initial content
+        if (!editor.getValue().trim()) {
+            editor.setValue(defaultCode);
+        }
+    </script>
+</body>
+</html>

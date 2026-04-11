@@ -1,26 +1,26 @@
 name: code-review-assistant
 version: 1.0.0
-description: Code review environment with 3 tasks
+description: OpenEnv-compliant RL environment for code review
+
+environment:
+  module: env.environment  # CRITICAL: env.environment not just environment
+  class: CodeReviewEnv
 
 tasks:
   - id: "easy"
-    grader: "graders:grade_easy"
+    grader: "env.graders:grade_easy"  # CRITICAL: env.graders:function_name
     name: "Syntax Error Detection"
-    description: "The code has missing parentheses. The agent must identify the syntax error."
+    description: "The code has missing parentheses. Identify the syntax error."
     difficulty: "easy"
     
   - id: "medium"
-    grader: "graders:grade_medium"
+    grader: "env.graders:grade_medium"
     name: "Runtime Bug Detection"
-    description: "The array index goes out of bounds. The agent must detect the runtime error."
+    description: "Array index goes out of bounds. Detect the runtime error."
     difficulty: "medium"
     
   - id: "hard"
-    grader: "graders:grade_hard"
+    grader: "env.graders:grade_hard"
     name: "Security Vulnerability Detection"
-    description: "The query is vulnerable to SQL injection. The agent must identify the security issue."
+    description: "SQL injection vulnerability. Identify the security issue."
     difficulty: "hard"
-
-environment:
-  module: environment
-  class: CodeReviewEnv

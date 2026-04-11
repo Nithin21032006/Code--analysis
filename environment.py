@@ -1,33 +1,44 @@
-from tasks import TASKS
-from graders import GRADERS
+# env/environment.py
+from env.tasks import TASKS
+from env.graders import GRADERS
 
 
 class CodeReviewEnv:
     def __init__(self):
-        self.tasks = TASKS if 'TASKS' in dir() else []
+        self.tasks = TASKS
+        self.current_task = None
         self.current_level = None
         self.step_count = 0
 
+    def list_tasks(self):
+        """Return all tasks for validator"""
+        return self.tasks
+
     def reset(self, level="easy"):
         """Reset environment"""
-        self.current_level = level
-        self.step_count = 0
-        return {
-            "status": "reset",
-            "level": level,
-            "code": self._get_sample_code(level)
-        }
+        for task in self.tasks:
+            if task["id"] == level:
+                self.current_task = task
+                self.current_level = level
+                self.step_count = 0
+                return {
+                    "task_id": task["id"],
+                    "difficulty": task["difficulty"],
+                    "code": task.get("sample_code", ""),
+                    "status": "reset"
+                }
+        return {"error": f"Task '{level}' not found"}
 
     def step(self, action):
         """Execute a step"""
         self.step_count += 1
         
-        # Get prediction from action
+        # Create prediction from action
         prediction = {
             "issue": action.get("comment", "") if isinstance(action, dict) else str(action)
         }
         
-        # Grade based on current level
+        # Grade the prediction
         score = self._grade(self.current_level, prediction)
         
         return {
@@ -38,9 +49,11 @@ class CodeReviewEnv:
 
     def state(self):
         """Get current state"""
+        if not self.current_task:
+            return {"status": "not_initialized"}
         return {
             "status": "active",
-            "current_level": self.current_level,
+            "current_task": self.current_level,
             "step_count": self.step_count
         }
 
@@ -55,7 +68,6 @@ class CodeReviewEnv:
         grader = grader_map.get(level)
         if grader:
             score = grader(prediction)
-            # Ensure score is between 0.10 and 0.99
             if score >= 1.0:
                 score = 0.99
             if score <= 0.0:
@@ -63,19 +75,10 @@ class CodeReviewEnv:
             return score
         return 0.50
 
-    def _get_sample_code(self, level):
-        """Get sample code for each level"""
-        samples = {
-            "easy": "def add(a,b)\n    return a+b",
-            "medium": "arr = [1,2,3]\nfor i in range(5):\n    print(arr[i])",
-            "hard": 'query = "SELECT * FROM users WHERE id=" + user_input'
-        }
-        return samples.get(level, "")
-
     def close(self):
         """Cleanup"""
         pass
 
 
-# Import grader functions for direct access
-from graders import grade_easy, grade_medium, grade_hard
+# Import grader functions
+from env.graders import grade_easy, grade_medium, grade_hard

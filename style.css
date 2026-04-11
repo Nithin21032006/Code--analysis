@@ -1,0 +1,401 @@
+/* Reset & Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: linear-gradient(145deg, #0B1120 0%, #111827 100%);
+    font-family: 'Inter', sans-serif;
+    color: #E5E7EB;
+    padding: 2rem 1.5rem;
+    min-height: 100vh;
+}
+
+/* Glass-morphism Container */
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    background: rgba(18, 25, 45, 0.65);
+    backdrop-filter: blur(12px);
+    border-radius: 2.5rem;
+    box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    padding: 2rem 2rem 2.5rem 2rem;
+    border: 1px solid rgba(71, 85, 105, 0.4);
+    transition: all 0.2s ease;
+}
+
+/* Header Section */
+.hero {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid rgba(75, 85, 99, 0.5);
+    padding-bottom: 1.2rem;
+}
+
+h1 {
+    font-size: 2.2rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #FFFFFF 0%, #A5B4FC 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    letter-spacing: -0.01em;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+h1 i {
+    background: none;
+    background-clip: unset;
+    -webkit-background-clip: unset;
+    color: #818CF8;
+    font-size: 2rem;
+}
+
+.badge {
+    background: rgba(99, 102, 241, 0.2);
+    backdrop-filter: blur(4px);
+    padding: 0.4rem 1rem;
+    border-radius: 60px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    border: 1px solid rgba(129, 140, 248, 0.5);
+    color: #C7D2FE;
+}
+
+.badge i {
+    margin-right: 6px;
+    font-size: 0.75rem;
+}
+
+.badge-small {
+    font-size: 0.7rem;
+    background: #1E293B;
+    padding: 2px 8px;
+    border-radius: 30px;
+    margin-left: auto;
+}
+
+/* Two-column Dashboard Layout */
+.dashboard {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.8rem;
+    margin: 1.5rem 0 1.8rem 0;
+}
+
+.editor-panel {
+    flex: 2;
+    min-width: 280px;
+    transition: all 0.2s;
+}
+
+.analysis-panel {
+    flex: 1.2;
+    min-width: 280px;
+    background: rgba(15, 23, 42, 0.6);
+    border-radius: 1.8rem;
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(71, 85, 105, 0.5);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 8px 20px -6px rgba(0, 0, 0, 0.3);
+}
+
+/* Panel Headers */
+.panel-header {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 1.2rem 1.5rem;
+    background: rgba(0, 0, 0, 0.25);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    font-weight: 600;
+    font-size: 1rem;
+    letter-spacing: -0.2px;
+}
+
+.panel-header i {
+    color: #818CF8;
+    font-size: 1.2rem;
+}
+
+.analysis-header-fixed {
+    background: rgba(15, 23, 42, 0.8);
+    backdrop-filter: blur(8px);
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+/* CodeMirror Custom Styling */
+.CodeMirror {
+    height: 480px;
+    border-radius: 1.2rem;
+    font-size: 14px;
+    font-family: 'Fira Code', 'JetBrains Mono', monospace;
+    box-shadow: 0 12px 24px -12px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(71, 85, 105, 0.6);
+}
+
+.CodeMirror-gutters {
+    border-radius: 1.2rem 0 0 1.2rem;
+}
+
+.CodeMirror-focused {
+    border-color: #818CF8;
+    box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.2);
+    transition: all 0.2s;
+}
+
+/* Action Bar & Buttons */
+.action-bar {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.btn-primary {
+    background: linear-gradient(95deg, #4F46E5 0%, #7C3AED 100%);
+    border: none;
+    padding: 0.85rem 2rem;
+    border-radius: 2rem;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: white;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+    box-shadow: 0 6px 14px -6px rgba(79, 70, 229, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.btn-primary i {
+    font-size: 1rem;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    background: linear-gradient(95deg, #6366F1 0%, #8B5CF6 100%);
+    box-shadow: 0 12px 20px -12px #4F46E5;
+}
+
+.btn-primary:active {
+    transform: translateY(1px);
+}
+
+.btn-secondary {
+    background: rgba(30, 41, 59, 0.8);
+    border: 1px solid rgba(100, 116, 139, 0.6);
+    padding: 0.85rem 1.5rem;
+    border-radius: 2rem;
+    font-weight: 500;
+    font-size: 0.9rem;
+    color: #CBD5E1;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+    background: rgba(51, 65, 85, 0.9);
+    color: white;
+    border-color: #818CF8;
+}
+
+/* Output / Analysis Content Styling */
+.output-content {
+    padding: 1.2rem 1.5rem 1.8rem 1.5rem;
+    flex: 1;
+    overflow-y: auto;
+    max-height: 480px;
+}
+
+/* Custom Scrollbar */
+.output-content::-webkit-scrollbar {
+    width: 5px;
+}
+
+.output-content::-webkit-scrollbar-track {
+    background: #1E293B;
+    border-radius: 8px;
+}
+
+.output-content::-webkit-scrollbar-thumb {
+    background: #4B5563;
+    border-radius: 8px;
+}
+
+/* Difficulty Tags */
+.difficulty-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0, 0, 0, 0.4);
+    padding: 0.5rem 1.2rem;
+    border-radius: 40px;
+    margin-bottom: 1.4rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-left: 3px solid;
+}
+
+.difficulty-easy {
+    border-left-color: #34D399;
+    color: #A7F3D0;
+}
+
+.difficulty-medium {
+    border-left-color: #FBBF24;
+    color: #FDE68A;
+}
+
+.difficulty-hard {
+    border-left-color: #F87171;
+    color: #FECACA;
+}
+
+/* Suggestions Section */
+.suggestions-title {
+    font-weight: 600;
+    margin: 1.2rem 0 0.8rem 0;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #9CA3AF;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.suggestions-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.suggestions-list li {
+    background: rgba(255, 255, 255, 0.03);
+    margin-bottom: 0.7rem;
+    padding: 0.8rem 1rem;
+    border-radius: 1rem;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all 0.15s ease;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+}
+
+.suggestions-list li i {
+    color: #818CF8;
+    margin-top: 2px;
+    font-size: 0.8rem;
+}
+
+.suggestions-list li:hover {
+    background: rgba(129, 140, 248, 0.08);
+    border-color: rgba(129, 140, 248, 0.3);
+    transform: translateX(3px);
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 2rem 1rem;
+    color: #6B7280;
+    font-style: italic;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.empty-state i {
+    font-size: 2rem;
+    opacity: 0.5;
+}
+
+/* Loading Spinner */
+.spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-top: 2px solid white;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Footer */
+.footer-note {
+    text-align: center;
+    font-size: 0.75rem;
+    margin-top: 2rem;
+    color: #6C727F;
+    border-top: 1px solid rgba(71, 85, 105, 0.3);
+    padding-top: 1.2rem;
+}
+
+/* Responsive Design */
+@media (max-width: 780px) {
+    body {
+        padding: 1rem;
+    }
+    
+    .container {
+        padding: 1.5rem;
+    }
+    
+    .CodeMirror {
+        height: 360px;
+    }
+    
+    .output-content {
+        max-height: 400px;
+    }
+    
+    h1 {
+        font-size: 1.6rem;
+    }
+    
+    .hero {
+        flex-direction: column;
+        gap: 0.8rem;
+        align-items: flex-start;
+    }
+    
+    .action-bar {
+        flex-direction: column;
+    }
+    
+    .btn-primary, .btn-secondary {
+        justify-content: center;
+    }
+}
+
+/* Additional Utility Classes */
+pre {
+    white-space: pre-wrap;
+    font-family: inherit;
+}
