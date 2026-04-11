@@ -1,72 +1,23 @@
 name: code-review-assistant
 version: 1.0.0
-description: |
-  Realistic code review environment where an AI agent reviews pull requests,
-  identifies issues, suggests improvements, and decides to approve or reject.
-  
-  Tasks progress from easy (style/syntax) to medium (logic/performance) 
-  to hard (security/architecture).
+description: Code review environment with 3 tasks
 
-author: Team Nishara
-tags:
-  - code-review
-  - software-engineering
-  - real-world
-  - agent-evaluation
+tasks:
+  - id: easy
+    name: Syntax Error Detection
+    difficulty: easy
+    grader: easy
+    
+  - id: medium
+    name: Runtime Bug Detection
+    difficulty: medium
+    grader: medium
+    
+  - id: hard
+    name: Security Vulnerability Detection
+    difficulty: hard
+    grader: hard
 
 environment:
   class: CodeReviewEnv
   module: environment
-
-action_space:
-  type: dict
-  properties:
-    action_type:
-      type: string
-      enum: [review, suggest_fix, approve, reject, request_changes]
-    comment:
-      type: string
-      description: Review comment or suggestion
-    line_number:
-      type: integer
-      description: Line number being reviewed
-    severity:
-      type: string
-      enum: [nitpick, warning, error, critical]
-
-observation_space:
-  type: dict
-  properties:
-    pr_title:
-      type: string
-    pr_description:
-      type: string
-    files_changed:
-      type: array
-    current_file:
-      type: string
-    code_content:
-      type: string
-    line_count:
-      type: integer
-    task_level:
-      type: string
-      enum: [easy, medium, hard]
-
-reward_schema:
-  type: float
-  range: [0.0, 1.0]
-  description: Score based on issue detection accuracy and suggestion quality
-
-tasks:
-  - id: syntax_style_review
-    difficulty: easy
-    objective: Identify syntax errors and style violations
-    
-  - id: logic_performance_review
-    difficulty: medium
-    objective: Find logic bugs and performance issues
-    
-  - id: security_architecture_review
-    difficulty: hard
-    objective: Detect security vulnerabilities and architectural problems
