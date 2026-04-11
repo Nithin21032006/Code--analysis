@@ -1,23 +1,45 @@
 name: code-review-assistant
 version: 1.0.0
-description: Code review environment with 3 tasks
+description: Code review environment with 3 difficulty levels
 
+# This tells the validator where to find your environment
+environment:
+  module: environment
+  class: CodeReviewEnv
+
+# This tells the validator about your tasks
 tasks:
   - id: easy
     name: Syntax Error Detection
     difficulty: easy
+    objective: Identify missing parentheses and syntax errors
     grader: easy
     
   - id: medium
     name: Runtime Bug Detection
     difficulty: medium
+    objective: Detect index out of range errors
     grader: medium
     
   - id: hard
     name: Security Vulnerability Detection
     difficulty: hard
+    objective: Identify SQL injection vulnerabilities
     grader: hard
 
-environment:
-  class: CodeReviewEnv
-  module: environment
+# Action space definition
+action_space:
+  type: dict
+  properties:
+    action_type:
+      type: string
+      enum: [review, suggest_fix, approve, reject]
+
+# Observation space definition  
+observation_space:
+  type: dict
+  properties:
+    code:
+      type: string
+    difficulty:
+      type: string
